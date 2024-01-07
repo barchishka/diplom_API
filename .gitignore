@@ -1,0 +1,7 @@
+.idea
+__pycache__
+venv
+action.txt
+.env
+.pytest_cache
+.git
