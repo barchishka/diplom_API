@@ -14,9 +14,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
 from rest_framework import viewsets
 from ujson import loads as load_json
+
+from drf_spectacular.utils import extend_schema
 
 from .tasks import do_import_task, new_user_registered_task, new_order_task
 from backend.models import *
@@ -29,14 +30,14 @@ class HomeView(TemplateView):
 
 class RegisterAccount(APIView):
     """Для регистрации покупателей"""
-    throttle_classes = (AnonRateThrottle, )
+    throttle_classes = (AnonRateThrottle,)
 
     # Регистрация методом POST
+    @extend_schema(responses=UserSerializer)
     def post(self, request, *args, **kwargs):
 
         # проверяем обязательные аргументы
-        if {'first_name', 'last_name', 'email', 'password',
-                'company', 'position'}.issubset(request.data):
+        if {'first_name', 'last_name', 'email', 'password', 'company', 'position'}.issubset(request.data):
             errors = {}
 
             # проверяем пароль на сложность
@@ -71,7 +72,8 @@ class ConfirmAccount(APIView):
     throttle_classes = (AnonRateThrottle,)
 
     # Регистрация методом POST
-    def post(self, request, *args, **kwargs):
+    @staticmethod
+    def post(request, *args, **kwargs):
 
         # проверяем обязательные аргументы
         if {'email', 'token'}.issubset(request.data):
@@ -93,6 +95,7 @@ class AccountDetails(APIView):
     throttle_classes = (UserRateThrottle,)
 
     # получить данные
+    @extend_schema(responses=UserSerializer)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -101,6 +104,7 @@ class AccountDetails(APIView):
         return Response(serializer.data)
 
     # Редактирование методом POST
+    @extend_schema(responses=UserSerializer)
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -136,6 +140,7 @@ class LoginAccount(APIView):
     throttle_classes = (AnonRateThrottle,)
 
     # Авторизация методом POST
+    @extend_schema(responses=UserSerializer)
     def post(self, request, *args, **kwargs):
 
         if {'email', 'password'}.issubset(request.data):
@@ -165,6 +170,7 @@ class ProductInfoView(APIView):
     """Класс для поиска товаров"""
     throttle_classes = (AnonRateThrottle,)
 
+    @extend_schema(responses=ProductInfoSerializer)
     def get(self, request, *args, **kwargs):
         query = Q(shop__state=True)
         shop_id = request.query_params.get('shop_id')
@@ -187,8 +193,10 @@ class ProductInfoView(APIView):
 class BasketView(APIView):
     """Класс для работы с корзиной пользователя"""
     throttle_classes = (UserRateThrottle,)
+
     # получить корзину
 
+    @extend_schema(responses=OrderSerializer)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -202,6 +210,7 @@ class BasketView(APIView):
         return Response(serializer.data)
 
     # редактировать корзину
+    @extend_schema(responses=OrderItemSerializer)
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -232,6 +241,7 @@ class BasketView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
     # удалить товары из корзины
+    @extend_schema(responses=OrderItemSerializer)
     def delete(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -252,6 +262,7 @@ class BasketView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
     # добавить позиции в корзину
+    @extend_schema(responses=OrderItemSerializer)
     def put(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -278,7 +289,8 @@ class PartnerUpdate(APIView):
     """Класс для обновления прайса от поставщика"""
     throttle_classes = (UserRateThrottle,)
 
-    def post(self, request, *args, **kwargs):
+    @staticmethod
+    def post(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
 
@@ -304,6 +316,7 @@ class PartnerState(APIView):
     throttle_classes = (UserRateThrottle,)
 
     # получить текущий статус
+    @extend_schema(responses=ShopSerializer)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -315,6 +328,7 @@ class PartnerState(APIView):
         return Response(serializer.data)
 
     # изменить текущий статус
+    @extend_schema(responses=ShopSerializer)
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -334,6 +348,7 @@ class PartnerOrders(APIView):
     """Класс для получения заказов поставщиками"""
     throttle_classes = (UserRateThrottle,)
 
+    @extend_schema(responses=OrderSerializer)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -353,8 +368,10 @@ class PartnerOrders(APIView):
 class ContactView(APIView):
     """Класс для работы с контактами покупателей"""
     throttle_classes = (UserRateThrottle,)
+
     # получить мои контакты
 
+    @extend_schema(responses=ContactSerializer)
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -364,6 +381,7 @@ class ContactView(APIView):
         return Response(serializer.data)
 
     # добавить новый контакт
+    @extend_schema(responses=ContactSerializer)
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -382,6 +400,7 @@ class ContactView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
     # удалить контакт
+    @extend_schema(responses=ContactSerializer)
     def delete(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -401,6 +420,7 @@ class ContactView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
     # редактировать контакт
+    @extend_schema(responses=ContactSerializer)
     def put(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
@@ -423,6 +443,7 @@ class OrderView(APIView):
     """Класс заказов покупателей"""
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses=OrderSerializer)
     def get(self, request, *args, **kwargs):
         """Функция получения списка заказанных товаров """
         order = Order.objects.filter(
@@ -432,6 +453,7 @@ class OrderView(APIView):
         return Response(serializer.data)
 
     # разместить заказ из корзины
+    @extend_schema(responses=OrderSerializer)
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)

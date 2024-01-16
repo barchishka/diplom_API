@@ -42,21 +42,21 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # 'django.contrib.staticfiles',
+    'django.contrib.staticfiles',
     'backend.apps.BackendConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'django_rest_passwordreset',
     'django_filters',
+
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'drf_spectacular',
     'allauth.socialaccount.providers.vk',
     'allauth.socialaccount.providers.github',
 
-    # # ALL YOUR APPS
-    # 'drf_spectacular',
-    # 'drf_spectacular_sidecar',    # required for Django collectstatic discovery
+
 ]
 
 MIDDLEWARE = [
@@ -79,8 +79,8 @@ ROOT_URLCONF = 'diplom_API.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        # 'DIRS': [os.path.join(BASE_DIR, 'backend/templates')],
+        # 'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'backend/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,13 +121,6 @@ DATABASES = {
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
     }
 }
-
-# SPECTACULAR_SETTINGS = {
-#     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
-#     'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
-#     'REDOC_DIST': 'SIDECAR',
-#     # OTHER SETTINGS
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -215,9 +208,16 @@ REST_FRAMEWORK = {
         'anon': '60/minute',
     },
 
-    # # YOUR SETTINGS
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'diplom_API',
+    # 'DESCRIPTION': 'Your project description',
+    # 'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'

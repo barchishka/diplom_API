@@ -7,8 +7,8 @@ from django.core.validators import URLValidator
 from requests import get
 from yaml import load as load_yaml, Loader
 from diplom_API.celery import celery_app
-from .models import User, Shop, Category, Product, ProductInfo, Parameter, \
-    ProductParameter, ConfirmEmailToken
+from .models import (User, Shop, Category, Product, ProductInfo,
+                     Parameter, ProductParameter, ConfirmEmailToken)
 
 
 @celery_app.task()
